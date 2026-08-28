@@ -25,14 +25,13 @@ import {
   Clock,
   User,
 } from "lucide-react";
-import { mockInquiries } from "@/lib/data/mockData";
 import { Inquiry, InquiryStatus } from "@/types/database";
 import { createClient } from "@/lib/supabase/client";
 import { formatDate } from "@/lib/utils";
 import DeleteModal from "@/components/admin/DeleteModal";
 
 export default function AdminInquiriesPage() {
-  const [inquiries, setInquiries] = useState<Inquiry[]>(mockInquiries);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
@@ -83,7 +82,7 @@ export default function AdminInquiriesPage() {
           if (data && data.length > 0) {
             // Merge Supabase + LocalStorage items (deduplicated by ID)
             const map = new Map<string, Inquiry>();
-            [...data, ...localInqs, ...mockInquiries].forEach((item) => {
+            [...data, ...localInqs].forEach((item) => {
               if (!map.has(item.id)) map.set(item.id, item as Inquiry);
             });
             setInquiries(Array.from(map.values()));
@@ -91,12 +90,12 @@ export default function AdminInquiriesPage() {
           }
         }
       } catch (err) {
-        console.warn("Using local & mock inquiries fallback:", err);
+        console.warn("Using local inquiries fallback:", err);
       }
 
-      // Fallback merge
+      // Fallback: only use actual local submissions
       const map = new Map<string, Inquiry>();
-      [...localInqs, ...mockInquiries].forEach((item) => {
+      localInqs.forEach((item) => {
         if (!map.has(item.id)) map.set(item.id, item);
       });
       setInquiries(Array.from(map.values()));

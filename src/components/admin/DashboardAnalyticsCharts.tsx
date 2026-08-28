@@ -47,11 +47,9 @@ export default function DashboardAnalyticsCharts() {
             if (Array.isArray(parsed)) localInqs.push(...parsed);
           }
 
-          // Count local session pageviews
-          const currentPv = Number(localStorage.getItem("bikinruang_live_pv") || "12");
-          const updatedPv = currentPv + 1;
-          localStorage.setItem("bikinruang_live_pv", String(updatedPv));
-          setPageviewsCount(updatedPv);
+          // Read real public pageviews (excluding admin visits)
+          const currentPv = Number(localStorage.getItem("bikinruang_public_pv") || "0");
+          setPageviewsCount(currentPv);
         }
       } catch (e) {
         console.warn("Storage read error:", e);
@@ -123,8 +121,17 @@ export default function DashboardAnalyticsCharts() {
             }
           });
 
+        const handleLivePv = (e: Event) => {
+          const customEv = e as CustomEvent<{ count: number }>;
+          if (customEv.detail?.count) {
+            setPageviewsCount(customEv.detail.count);
+          }
+        };
+        window.addEventListener("bikinruang-pageview", handleLivePv);
+
         return () => {
           supabase.removeChannel(channel);
+          window.removeEventListener("bikinruang-pageview", handleLivePv);
         };
       }
     } catch (err) {
